@@ -1,8 +1,9 @@
 # mimo-mcp
 
-Lightweight Model Context Protocol server for Xiaomi MiMo. It exposes MiMo web
-search, multimodal understanding, and speech synthesis to Claude Code and other
-MCP clients over stdio.
+Lightweight Model Context Protocol server for Xiaomi MiMo, verified with
+Claude Code. It exposes MiMo web search, multimodal understanding, and speech
+synthesis over stdio. Other MCP clients may work if they support stdio MCP
+servers, but they are not claimed as compatible until tested.
 
 English is the primary documentation language. A concise Chinese guide is
 available in [中文说明](#中文说明).
@@ -28,7 +29,7 @@ Usage guidance lives in `skills/mimo/SKILL.md` and can be loaded only when neede
 
 - [Quick Start](#quick-start)
 - [Client Configuration](#client-configuration)
-- [Client Compatibility](#client-compatibility)
+- [Client Boundaries](#client-boundaries)
 - [Tools](#tools)
 - [Configuration](#configuration)
 - [Token Plan Support](#token-plan-support)
@@ -65,7 +66,8 @@ Xiaomi's public MiMo-V2.5 open-source announcement says the MiMo-V2.5 model weig
 
 - Node.js 18+
 - Xiaomi MiMo API key
-- Claude Code or another MCP client
+- Claude Code for the verified path, or another MCP client that supports stdio
+  MCP servers
 
 For web search, enable the MiMo Web Search Plugin in the Xiaomi console and use
 a pay-as-you-go MiMo API key for search calls:
@@ -88,7 +90,8 @@ MiMo may take a few minutes to apply plugin enable/disable changes.
    a separate pay-as-you-go key as `MIMO_WEB_SEARCH_API_KEY` for this tool.
 5. Wait a few minutes after enabling or disabling the plugin, because MiMo may
    cache plugin state briefly.
-6. Register the MCP server in Claude Code or another MCP client.
+6. Register the MCP server in Claude Code. For other MCP clients, adapt the
+   generic stdio config and run your own load/tool smoke tests.
 
 Clone and install dependencies:
 
@@ -174,7 +177,7 @@ Windows path example:
 }
 ```
 
-## Client Compatibility
+## Client Boundaries
 
 Xiaomi's official integration docs for OpenCode, Claude Code, OpenClaw, Hermes
 Agent, Cline, Kilo Code, Roo Code, Codex, Cherry Studio, Zed, TRAE, and Qwen
@@ -185,8 +188,8 @@ If a client already supports MiMo through an OpenAI-compatible or
 Anthropic-compatible provider, you do not need this MCP for normal text chat or
 coding-agent model calls. Use the native provider path for that.
 
-Use this MCP when you want MiMo capabilities as explicit tools inside an MCP
-client:
+This repository only claims real mounted MCP verification for Claude Code. Use
+this MCP when you want MiMo capabilities as explicit tools in Claude Code:
 
 - `mimo_web_search`
 - `mimo_image_understand`
@@ -194,13 +197,17 @@ client:
 - `mimo_video_understand`
 - `mimo_tts`
 
+Other MCP-capable clients may be able to load the same stdio server, but that is
+an integration to test, not a compatibility claim.
+
 Short rule:
 
 | Need | Best path |
 | --- | --- |
 | Normal text/code model provider | Use MiMo's official OpenAI/Anthropic-compatible client configuration |
 | Native image input in a client that already supports OpenAI-compatible vision | Use the native provider first |
-| Audio/video understanding, TTS, explicit Web Search tools, local-file media handling, or stable Claude Code tool calls | Add this MCP if the client supports MCP servers |
+| Claude Code needs audio/video understanding, TTS, explicit Web Search tools, local-file media handling, or stable MiMo tool calls | Add this MCP; this path has been smoke-tested with real Claude Code mounting |
+| Another MCP-capable client needs MiMo tools | Treat it as unverified until you run provider, MCP-load, and MCP-tool smoke tests in that client |
 | Client has no MCP support | Use the official provider configuration only; this MCP cannot be loaded there |
 
 Detailed notes for the tools in Xiaomi's integration list are in
@@ -387,7 +394,7 @@ Skill is the guidance layer: it explains when to use each tool and how to shape 
 
 ## 中文说明
 
-这是一个面向 Xiaomi MiMo 的轻量 MCP 服务器，可以把 MiMo 的联网搜索、图像理解、音频理解、视频理解和语音合成接入 Claude Code 或其他 MCP 客户端。
+这是一个面向 Xiaomi MiMo 的轻量 MCP 服务器，已在 Claude Code 真实挂载场景下验证。它可以把 MiMo 的联网搜索、图像理解、音频理解、视频理解和语音合成接入 Claude Code。其他支持 stdio MCP 的客户端理论上可以尝试加载，但没有逐个完成兼容性验证。
 
 英文部分是主文档；本节提供中文快速说明，方便首次配置和排障。
 
@@ -408,7 +415,7 @@ Skill is the guidance layer: it explains when to use each tool and how to shape 
 3. 不要把真实 API key 提交或粘贴到 README、Skill、源码、截图、聊天记录或任何 Git 跟踪文件。
 4. 使用 `mimo_web_search` 前，请在 MiMo 网页控制台启用 Web Search Plugin。如果主 key 是 Token Plan 的 `tp-...`，请额外配置按量计费 key 到 `MIMO_WEB_SEARCH_API_KEY`。
 5. 插件启用或关闭后，等待几分钟让 MiMo 缓存状态刷新。
-6. 在 Claude Code 里注册 MCP，并用 `claude mcp get mimo` 确认连接状态。
+6. 在 Claude Code 里注册 MCP，并用 `claude mcp get mimo` 确认连接状态。其他 MCP 客户端需要按各自配置方式自行做加载和工具调用烟测。
 
 ### 安装
 
@@ -442,13 +449,13 @@ claude mcp add -s user mimo -- node "C:\path\to\mimo-mcp\src\server.js"
 claude mcp get mimo
 ```
 
-### 其他客户端兼容性
+### 其他客户端边界
 
 小米官方的 OpenCode、Claude Code、OpenClaw、Hermes Agent、Cline、Kilo Code、Roo Code、Codex、Cherry Studio、Zed、TRAE、Qwen Code 文档，主要说明的是如何通过 OpenAI 兼容协议或 Anthropic 兼容协议把 MiMo 配成模型 provider。
 
 如果只是普通文本对话或 Coding agent 模型调用，并且客户端已经支持 MiMo 的 OpenAI/Anthropic 兼容配置，通常不需要这个 MCP，直接按官方 provider 文档配置即可。
 
-如果你希望在支持 MCP 的客户端里把 MiMo 的联网搜索、图像理解、音频理解、视频理解和 TTS 当成明确工具来调用，再加载这个 MCP。更详细的客户端矩阵见 [docs/client-compatibility.md](docs/client-compatibility.md)。
+本仓库目前只声明 Claude Code 真实挂载 MCP 已验证。如果你希望在其他支持 MCP 的客户端里把 MiMo 的联网搜索、图像理解、音频理解、视频理解和 TTS 当成明确工具来调用，需要在对应客户端中额外完成 provider、MCP 加载、MCP 工具调用三层烟测。更详细的边界说明见 [docs/client-compatibility.md](docs/client-compatibility.md)。
 
 ### 工具列表
 

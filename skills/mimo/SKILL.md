@@ -18,7 +18,7 @@ When helping a user configure this MCP server for the first time:
 - Remind them to enable the Web Search Plugin in the MiMo web console before using `mimo_web_search`.
 - If their main key is a Token Plan `tp-...` key, tell them `mimo_web_search` also needs a separate pay-as-you-go key in `MIMO_WEB_SEARCH_API_KEY`.
 - If the plugin was just enabled, tell them MiMo may need several minutes before search starts working.
-- Confirm with `claude mcp get mimo` or the client's equivalent MCP status command.
+- For Claude Code, confirm with `claude mcp get mimo`. For other clients, do not call them compatible until their MCP load and tool calls are tested.
 
 ## Tool Choice
 
@@ -34,7 +34,9 @@ Do not present this MCP as a replacement for Xiaomi's official OpenAI-compatible
 
 If the user only needs normal text/code chat in OpenCode, Claude Code, OpenClaw, Hermes Agent, Cline, Kilo Code, Roo Code, Codex, Cherry Studio, Zed, TRAE, Qwen Code, or another compatible client, tell them to use Xiaomi's official provider setup.
 
-Use this MCP when the client can load MCP servers and the user wants MiMo Web Search, image/audio/video understanding, TTS, or local media handling as explicit tools. See `docs/client-compatibility.md` for the client matrix and official Xiaomi integration links.
+This repository only claims real mounted MCP verification for Claude Code. Use this MCP when Claude Code needs MiMo Web Search, image/audio/video understanding, TTS, or local media handling as explicit tools.
+
+For other clients, describe the status as unverified unless all three checks have passed in that client: MiMo provider smoke, MCP load smoke, and MCP tool-call smoke. See `docs/client-compatibility.md` for the boundary notes and official Xiaomi integration links.
 
 ## Media Inputs
 
