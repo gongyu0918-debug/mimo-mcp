@@ -1,15 +1,35 @@
 # mimo-mcp
 
-Lightweight MCP server for Xiaomi MiMo:
+Lightweight Model Context Protocol server for Xiaomi MiMo. It exposes MiMo web
+search, multimodal understanding, and speech synthesis to Claude Code and other
+MCP clients over stdio.
 
-- Web search
-- Image understanding
-- Audio understanding
-- Video understanding
-- Speech synthesis
+## Highlights
+
+- Five compact MCP tools for search, image, audio, video, and TTS workflows.
+- Web search support through Xiaomi MiMo's OpenAI-compatible `web_search` tool.
+- Multimodal media support from public URLs, data URIs, or local files.
+- TTS output is written to disk and returned as a path, avoiding large base64
+  blobs in chat context.
+- MiMo-only environment variables by design, so unrelated OpenAI or Anthropic
+  credentials are never reused accidentally.
+- Optional Skill documentation in `skills/mimo/SKILL.md` for usage guidance
+  without bloating the MCP schema.
 
 The MCP tool descriptions stay intentionally short to reduce context overhead.
 Usage guidance lives in `skills/mimo/SKILL.md` and can be loaded only when needed.
+
+## Contents
+
+- [Quick Start](#quick-start)
+- [Client Configuration](#client-configuration)
+- [Tools](#tools)
+- [Configuration](#configuration)
+- [Smoke Tests](#smoke-tests)
+- [Security Notes](#security-notes)
+- [Troubleshooting](#troubleshooting)
+- [GitHub Landscape](#github-landscape)
+- [License And Xiaomi Terms](#license-and-xiaomi-terms)
 
 ## GitHub Landscape
 
@@ -45,7 +65,9 @@ https://platform.xiaomimimo.com/#/console/plugin
 
 MiMo may take a few minutes to apply plugin enable/disable changes.
 
-## Install
+## Quick Start
+
+Clone and install dependencies:
 
 ```bash
 git clone https://github.com/YOUR_NAME/mimo-mcp.git
@@ -65,7 +87,16 @@ setx MIMO_API_KEY "sk-..."
 
 Use a MiMo key here. The server intentionally does not read `OPENAI_*` or `ANTHROPIC_*` variables to avoid accidentally sending unrelated credentials to MiMo.
 
-## Claude Code
+Run local checks:
+
+```bash
+npm run check
+npm run smoke -- "latest Xiaomi MiMo model updates"
+```
+
+## Client Configuration
+
+### Claude Code
 
 Add the MCP server:
 
@@ -85,6 +116,41 @@ Check the server:
 claude mcp get mimo
 ```
 
+### Generic MCP JSON
+
+For MCP clients that accept JSON configuration, use the stdio form below. Prefer
+setting `MIMO_API_KEY` in your shell or OS environment instead of committing it
+to a config file.
+
+```json
+{
+  "mcpServers": {
+    "mimo": {
+      "command": "node",
+      "args": ["/absolute/path/to/mimo-mcp/src/server.js"],
+      "env": {
+        "MIMO_MODEL": "mimo-v2.5-pro",
+        "MIMO_MULTIMODAL_MODEL": "mimo-v2.5",
+        "MIMO_TTS_MODEL": "mimo-v2.5-tts"
+      }
+    }
+  }
+}
+```
+
+Windows path example:
+
+```json
+{
+  "mcpServers": {
+    "mimo": {
+      "command": "node",
+      "args": ["C:\\Users\\you\\mimo-mcp\\src\\server.js"]
+    }
+  }
+}
+```
+
 ## Tools
 
 | Tool | Purpose |
@@ -98,6 +164,22 @@ claude mcp get mimo
 Media tools accept public URLs, data URIs, or local file paths readable by the MCP server process.
 
 TTS writes generated audio to a file and returns the path, avoiding large base64 audio blobs in chat context.
+
+### Usage Examples
+
+Ask the MCP client to use the appropriate MiMo tool:
+
+```text
+Use mimo_web_search to check the latest Xiaomi MiMo V2.5 license details.
+```
+
+```text
+Use mimo_image_understand on this local screenshot and summarize the UI issues.
+```
+
+```text
+Use mimo_tts to synthesize this sentence with the preset voice, writing a wav file.
+```
 
 ## Configuration
 
@@ -134,7 +216,7 @@ skills/mimo/SKILL.md
 
 Use it in environments that support skills when you want routing guidance, prompt tips, supported voice IDs, or troubleshooting notes without bloating the MCP schema.
 
-## Smoke Test
+## Smoke Tests
 
 Syntax check:
 
@@ -155,6 +237,29 @@ npm run smoke:all
 ```
 
 If web search fails but normal MiMo calls work, check whether the Web Search Plugin is enabled and whether the cache delay has passed.
+
+## Security Notes
+
+- Do not commit API keys. Use OS-level environment variables or your MCP
+  client's secret handling.
+- This server only reads `MIMO_*` environment variables. It intentionally avoids
+  `OPENAI_*` and `ANTHROPIC_*` fallbacks.
+- Local media files are read by the MCP server process and encoded for MiMo API
+  requests. Keep `MIMO_MAX_LOCAL_MEDIA_MB` conservative for large audio or video.
+- Treat model output and search results as untrusted content when using them in
+  automation or code changes.
+- Mark AI-generated or synthesized content when applicable under your local
+  rules and Xiaomi platform terms.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| `Missing MIMO_API_KEY` | Set `MIMO_API_KEY` in the same environment that launches the MCP client. |
+| Web search returns normal chat only | Enable the MiMo Web Search Plugin in the Xiaomi console and wait for cache propagation. |
+| Token Plan key fails | Set `MIMO_PLAN=token-plan` and verify `MIMO_REGION` is `cn`, `sgp`, or `ams`. |
+| Local media upload fails | Check file path quoting, file permissions, and `MIMO_MAX_LOCAL_MEDIA_MB`. |
+| Claude Code does not show the server | Run `claude mcp get mimo`, then restart the Claude Code session if needed. |
 
 ## Why MCP plus Skill?
 
