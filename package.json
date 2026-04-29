@@ -1,0 +1,38 @@
+{
+  "name": "mimo-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Xiaomi MiMo web search, multimodal understanding, and speech synthesis.",
+  "type": "module",
+  "bin": {
+    "mimo-mcp": "./src/server.js"
+  },
+  "files": [
+    "src",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node src/server.js",
+    "check": "node --check src/media.js && node --check src/mimoClient.js && node --check src/server.js && node --check scripts/smoke.js",
+    "smoke": "node scripts/smoke.js"
+  },
+  "keywords": [
+    "mcp",
+    "claude-code",
+    "xiaomi",
+    "mimo",
+    "web-search",
+    "multimodal",
+    "tts"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.1.12"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
