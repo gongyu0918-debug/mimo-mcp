@@ -72,8 +72,9 @@ The MCP server reads:
 - `MIMO_MODEL`
 - `MIMO_MULTIMODAL_MODEL`
 - `MIMO_TTS_MODEL`
+- `MIMO_MAX_LOCAL_MEDIA_MB`
 
-If `MIMO_API_KEY` is absent, it can reuse `ANTHROPIC_AUTH_TOKEN`.
+Set `MIMO_API_KEY` explicitly. The MCP server intentionally does not read `OPENAI_*` or `ANTHROPIC_*` variables to avoid sending unrelated credentials to MiMo.
 
 For token-plan keys beginning with `tp-`, set `MIMO_REGION` to `cn`, `sgp`, or `ams` unless `MIMO_BASE_URL` is explicitly set.
 

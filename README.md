@@ -22,6 +22,17 @@ Related projects found:
 
 Both repositories were newly pushed on April 28-29, 2026 and had 0 stars / 0 forks when checked. This repository is therefore a small purpose-built implementation rather than a fork of an established mature package.
 
+## License And Xiaomi Terms
+
+This repository's own code is MIT licensed.
+
+Xiaomi's public MiMo-V2.5 open-source announcement says the MiMo-V2.5 model weights are released under the MIT License. Xiaomi MiMo Open Platform API usage is still governed by Xiaomi's platform service agreement and privacy policy. In particular:
+
+- Keep API keys secret; do not publish them in code, browser clients, logs, or screenshots.
+- Follow applicable laws and Xiaomi platform rules when using generated or synthesized content.
+- Add required labels or marks for AI-generated or synthesized content when applicable.
+- This project is not an official Xiaomi project. Xiaomi, MiMo, and related marks belong to their owners.
+
 ## Requirements
 
 - Node.js 18+
@@ -52,7 +63,7 @@ export MIMO_API_KEY="sk-..."
 setx MIMO_API_KEY "sk-..."
 ```
 
-If `MIMO_API_KEY` is absent, the server can reuse `ANTHROPIC_AUTH_TOKEN`.
+Use a MiMo key here. The server intentionally does not read `OPENAI_*` or `ANTHROPIC_*` variables to avoid accidentally sending unrelated credentials to MiMo.
 
 ## Claude Code
 
@@ -92,7 +103,7 @@ TTS writes generated audio to a file and returns the path, avoiding large base64
 
 | Name | Default | Description |
 | --- | --- | --- |
-| `MIMO_API_KEY` | empty | Xiaomi MiMo API key. Falls back to `ANTHROPIC_AUTH_TOKEN`. |
+| `MIMO_API_KEY` | empty | Xiaomi MiMo API key. Required. |
 | `MIMO_BASE_URL` | auto | Explicit OpenAI-compatible base URL override. |
 | `MIMO_PLAN` | auto | `pay-as-you-go` or `token-plan`. Usually inferred from key prefix. |
 | `MIMO_REGION` | `cn` | Token Plan region: `cn`, `sgp`, or `ams`. |
@@ -105,6 +116,7 @@ TTS writes generated audio to a file and returns the path, avoiding large base64
 | `MIMO_SEARCH_REGION` | empty | Optional default region/state for search. |
 | `MIMO_SEARCH_CITY` | empty | Optional default city for search. |
 | `MIMO_TIMEOUT_MS` | `60000` | Request timeout. |
+| `MIMO_MAX_LOCAL_MEDIA_MB` | `50` | Max local media file size encoded into data URIs. |
 
 Default base URL behavior:
 
@@ -134,6 +146,12 @@ API smoke test:
 
 ```bash
 npm run smoke -- "latest Xiaomi MiMo model updates"
+```
+
+All-modality MCP smoke test:
+
+```bash
+npm run smoke:all
 ```
 
 If web search fails but normal MiMo calls work, check whether the Web Search Plugin is enabled and whether the cache delay has passed.

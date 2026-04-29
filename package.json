@@ -8,14 +8,16 @@
   },
   "files": [
     "src",
+    "scripts",
     "skills",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "start": "node src/server.js",
-    "check": "node --check src/media.js && node --check src/mimoClient.js && node --check src/server.js && node --check scripts/smoke.js",
-    "smoke": "node scripts/smoke.js"
+    "check": "node --check src/media.js && node --check src/mimoClient.js && node --check src/server.js && node --check scripts/smoke.js && node --check scripts/smoke-all.js",
+    "smoke": "node scripts/smoke.js",
+    "smoke:all": "node scripts/smoke-all.js"
   },
   "keywords": [
     "mcp",

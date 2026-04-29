@@ -33,9 +33,21 @@ export async function mediaInputToUrl(value, explicitMimeType = "") {
   }
 
   const absolutePath = path.resolve(raw);
+  await assertLocalFileSize(absolutePath);
   const bytes = await fs.readFile(absolutePath);
   const mimeType = explicitMimeType || inferMimeType(absolutePath);
   return `data:${mimeType};base64,${bytes.toString("base64")}`;
+}
+
+async function assertLocalFileSize(filePath) {
+  const maxMb = Number.parseFloat(process.env.MIMO_MAX_LOCAL_MEDIA_MB || "50");
+  const maxBytes = Number.isFinite(maxMb) && maxMb > 0 ? maxMb * 1024 * 1024 : 50 * 1024 * 1024;
+  const stat = await fs.stat(filePath);
+  if (stat.size > maxBytes) {
+    throw new Error(
+      `Local media file is too large: ${filePath} is ${Math.ceil(stat.size / 1024 / 1024)}MB; limit is ${maxMb}MB. Set MIMO_MAX_LOCAL_MEDIA_MB to override.`
+    );
+  }
 }
 
 export function inferMimeType(filePath) {

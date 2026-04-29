@@ -11,11 +11,11 @@ const DEFAULT_MULTIMODAL_MODEL = "mimo-v2.5";
 const DEFAULT_TTS_MODEL = "mimo-v2.5-tts";
 
 export function getConfig(env = process.env) {
-  const apiKey = env.MIMO_API_KEY || env.ANTHROPIC_AUTH_TOKEN || env.ANTHROPIC_API_KEY;
+  const apiKey = env.MIMO_API_KEY;
   return {
     apiKey,
     baseUrl: resolveBaseUrl(apiKey, env),
-    model: env.MIMO_MODEL || env.ANTHROPIC_MODEL || DEFAULT_MODEL,
+    model: env.MIMO_MODEL || DEFAULT_MODEL,
     multimodalModel: env.MIMO_MULTIMODAL_MODEL || DEFAULT_MULTIMODAL_MODEL,
     ttsModel: env.MIMO_TTS_MODEL || DEFAULT_TTS_MODEL,
     timeoutMs: toInt(env.MIMO_TIMEOUT_MS, 60000),
@@ -28,8 +28,8 @@ export function getConfig(env = process.env) {
 }
 
 export function resolveBaseUrl(apiKey = "", env = process.env) {
-  if (env.MIMO_BASE_URL || env.OPENAI_BASE_URL) {
-    return normalizeBaseUrl(env.MIMO_BASE_URL || env.OPENAI_BASE_URL);
+  if (env.MIMO_BASE_URL) {
+    return normalizeBaseUrl(env.MIMO_BASE_URL);
   }
 
   const plan = String(env.MIMO_PLAN || "").trim().toLowerCase().replace(/_/g, "-");
@@ -149,7 +149,10 @@ export async function understandMediaWithMiMo(kind, input, env = process.env) {
     ],
     max_completion_tokens: maxCompletionTokens,
     temperature: clampNumber(input.temperature, 0.2, 0, 2),
-    top_p: clampNumber(input.top_p, 0.95, 0, 1)
+    top_p: clampNumber(input.top_p, 0.95, 0, 1),
+    thinking: {
+      type: "disabled"
+    }
   }, env);
 
   return normalizeChatResponse(data);
@@ -215,7 +218,7 @@ export async function createChatCompletion(body, env = process.env) {
 
   if (!config.apiKey) {
     throw new Error(
-      "Missing API key. Set MIMO_API_KEY, or reuse ANTHROPIC_AUTH_TOKEN if it contains your Xiaomi MiMo key."
+      "Missing API key. Set MIMO_API_KEY to your Xiaomi MiMo API key."
     );
   }
 
@@ -285,10 +288,6 @@ export function formatChatResult(result, includeRaw = false) {
   const parts = [];
   if (result.answer) {
     parts.push(result.answer.trim());
-  }
-
-  if (result.reasoning_content && !result.answer) {
-    parts.push(result.reasoning_content.trim());
   }
 
   if (result.usage) {
