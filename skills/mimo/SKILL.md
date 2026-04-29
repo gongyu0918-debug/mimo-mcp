@@ -36,7 +36,7 @@ If the user only needs normal text/code chat in OpenCode, Claude Code, OpenClaw,
 
 This repository only claims real mounted MCP verification for Claude Code. Use this MCP when Claude Code needs MiMo Web Search, image/audio/video understanding, TTS, or local media handling as explicit tools.
 
-For other clients, describe the status as unverified unless all three checks have passed in that client: MiMo provider smoke, MCP load smoke, and MCP tool-call smoke. See `docs/client-compatibility.md` for the boundary notes and official Xiaomi integration links.
+For other clients, describe the status as unverified unless all three checks have passed in that client: MiMo provider smoke, MCP load smoke, and MCP tool-call smoke. See `docs/client-boundaries.md` for the boundary notes and official Xiaomi integration links.
 
 ## Media Inputs
 

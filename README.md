@@ -210,8 +210,8 @@ Short rule:
 | Another MCP-capable client needs MiMo tools | Treat it as unverified until you run provider, MCP-load, and MCP-tool smoke tests in that client |
 | Client has no MCP support | Use the official provider configuration only; this MCP cannot be loaded there |
 
-Detailed notes for the tools in Xiaomi's integration list are in
-[docs/client-compatibility.md](docs/client-compatibility.md).
+Detailed boundary notes for the tools in Xiaomi's integration list are in
+[docs/client-boundaries.md](docs/client-boundaries.md).
 
 ## Tools
 
@@ -455,7 +455,7 @@ claude mcp get mimo
 
 如果只是普通文本对话或 Coding agent 模型调用，并且客户端已经支持 MiMo 的 OpenAI/Anthropic 兼容配置，通常不需要这个 MCP，直接按官方 provider 文档配置即可。
 
-本仓库目前只声明 Claude Code 真实挂载 MCP 已验证。如果你希望在其他支持 MCP 的客户端里把 MiMo 的联网搜索、图像理解、音频理解、视频理解和 TTS 当成明确工具来调用，需要在对应客户端中额外完成 provider、MCP 加载、MCP 工具调用三层烟测。更详细的边界说明见 [docs/client-compatibility.md](docs/client-compatibility.md)。
+本仓库目前只声明 Claude Code 真实挂载 MCP 已验证。如果你希望在其他支持 MCP 的客户端里把 MiMo 的联网搜索、图像理解、音频理解、视频理解和 TTS 当成明确工具来调用，需要在对应客户端中额外完成 provider、MCP 加载、MCP 工具调用三层烟测。更详细的边界说明见 [docs/client-boundaries.md](docs/client-boundaries.md)。
 
 ### 工具列表
 

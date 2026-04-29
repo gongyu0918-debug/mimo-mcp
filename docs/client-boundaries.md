@@ -47,7 +47,7 @@ tools:
 | Another MCP-capable client needs MiMo tools | Treat it as unverified until you run client-specific MCP tests. |
 | A client has no MCP server setting | Use the official provider setup only; this MCP cannot be loaded directly. |
 
-## What Counts as Compatibility
+## What Counts as Verified Support
 
 Do not treat "the client supports OpenAI-compatible MiMo provider" as "this MCP
 is compatible with the client." Those are different layers.
@@ -159,4 +159,4 @@ Official references:
 
 如果只是普通文本对话和 coding agent 模型调用，直接按小米官方 provider 文档配置 MiMo 即可，不需要这个 MCP。
 
-如果要把 MiMo 的联网搜索、图像理解、音频理解、视频理解和 TTS 包装成显式工具，目前只声明 Claude Code 已完成真实挂载烟测。其他客户端需要分别完成 provider、MCP 加载、MCP 工具调用三层测试后，才能标记为已兼容。
+如果要把 MiMo 的联网搜索、图像理解、音频理解、视频理解和 TTS 包装成显式工具，目前只声明 Claude Code 已完成真实挂载烟测。其他客户端需要分别完成 provider、MCP 加载、MCP 工具调用三层测试后，才能标记为已验证。
