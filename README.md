@@ -4,6 +4,9 @@ Lightweight Model Context Protocol server for Xiaomi MiMo. It exposes MiMo web
 search, multimodal understanding, and speech synthesis to Claude Code and other
 MCP clients over stdio.
 
+English is the primary documentation language. A concise Chinese guide is
+available in [中文说明](#中文说明).
+
 ## Highlights
 
 - Five compact MCP tools for search, image, audio, video, and TTS workflows.
@@ -30,6 +33,7 @@ Usage guidance lives in `skills/mimo/SKILL.md` and can be loaded only when neede
 - [Troubleshooting](#troubleshooting)
 - [GitHub Landscape](#github-landscape)
 - [License And Xiaomi Terms](#license-and-xiaomi-terms)
+- [中文说明](#中文说明)
 
 ## GitHub Landscape
 
@@ -277,6 +281,124 @@ If web search fails but normal MiMo calls work, check whether the Web Search Plu
 MCP is the executable layer: it calls MiMo APIs, reads local media, and writes generated audio.
 
 Skill is the guidance layer: it explains when to use each tool and how to shape prompts, but only when needed. This keeps Claude Code's regular context smaller.
+
+## 中文说明
+
+这是一个面向 Xiaomi MiMo 的轻量 MCP 服务器，可以把 MiMo 的联网搜索、图像理解、音频理解、视频理解和语音合成接入 Claude Code 或其他 MCP 客户端。
+
+英文部分是主文档；本节提供中文快速说明，方便首次配置和排障。
+
+### 功能亮点
+
+- 提供 5 个精简 MCP 工具：联网搜索、图像理解、音频理解、视频理解、TTS。
+- 联网搜索使用 MiMo OpenAI 兼容接口里的 `web_search` 工具。
+- 多模态输入支持公网 URL、data URI、以及 MCP 进程可读取的本地文件路径。
+- TTS 会把音频写入本地文件并返回路径，避免把大段 base64 音频塞进上下文。
+- 只读取 `MIMO_*` 环境变量，不读取 `OPENAI_*` 或 `ANTHROPIC_*`，避免误用其他平台密钥。
+- 可选 Skill 位于 `skills/mimo/SKILL.md`，用于保存使用建议，减少 MCP schema 的常驻上下文占用。
+
+### 首次配置清单
+
+1. 在 MiMo 控制台创建或复制 API key。
+2. 在本机环境变量里设置 `MIMO_API_KEY`。
+3. 不要把 API key 写进 README、Skill、源码、截图、聊天记录或任何 Git 跟踪文件。
+4. 使用 `mimo_web_search` 前，请在 MiMo 网页控制台启用 Web Search Plugin。
+5. 插件启用或关闭后，等待几分钟让 MiMo 缓存状态刷新。
+6. 在 Claude Code 里注册 MCP，并用 `claude mcp get mimo` 确认连接状态。
+
+### 安装
+
+```bash
+git clone https://github.com/gongyu0918-debug/mimo-mcp.git
+cd mimo-mcp
+npm install
+```
+
+设置 API key：
+
+```bash
+# macOS/Linux
+export MIMO_API_KEY="sk-..."
+
+# Windows PowerShell
+setx MIMO_API_KEY "sk-..."
+```
+
+### Claude Code 配置
+
+```bash
+claude mcp add -s user mimo -- node /absolute/path/to/mimo-mcp/src/server.js
+claude mcp get mimo
+```
+
+Windows PowerShell 示例：
+
+```powershell
+claude mcp add -s user mimo -- node "C:\path\to\mimo-mcp\src\server.js"
+claude mcp get mimo
+```
+
+### 工具列表
+
+| 工具 | 用途 |
+| --- | --- |
+| `mimo_web_search` | 使用 MiMo 联网搜索回答最新或时效性问题 |
+| `mimo_image_understand` | 图片、截图、图表、视觉内容分析 |
+| `mimo_audio_understand` | 音频转写、音频描述、音频问答 |
+| `mimo_video_understand` | 视频总结、画面描述、视频问答 |
+| `mimo_tts` | 预设音色、声音设计、声音克隆 TTS |
+
+### 常用环境变量
+
+| 名称 | 说明 |
+| --- | --- |
+| `MIMO_API_KEY` | 必填，Xiaomi MiMo API key |
+| `MIMO_MODEL` | 联网搜索回答模型，默认 `mimo-v2.5-pro` |
+| `MIMO_MULTIMODAL_MODEL` | 图像/音频/视频理解模型，默认 `mimo-v2.5` |
+| `MIMO_TTS_MODEL` | 默认 TTS 模型，默认 `mimo-v2.5-tts` |
+| `MIMO_PLAN` | `pay-as-you-go` 或 `token-plan`，通常可自动判断 |
+| `MIMO_REGION` | Token Plan 区域：`cn`、`sgp` 或 `ams` |
+| `MIMO_MAX_LOCAL_MEDIA_MB` | 本地媒体文件大小上限，默认 50 MB |
+
+### 冒烟测试
+
+语法检查：
+
+```bash
+npm run check
+```
+
+联网搜索快速测试：
+
+```bash
+npm run smoke -- "latest Xiaomi MiMo model updates"
+```
+
+全模态 MCP 测试：
+
+```bash
+npm run smoke:all
+```
+
+`smoke:all` 会依次测试联网搜索、图像理解、音频理解、视频理解、预设 TTS、声音设计 TTS 和声音克隆 TTS。
+
+### 常见问题
+
+| 现象 | 检查项 |
+| --- | --- |
+| 提示 `Missing MIMO_API_KEY` | 确认启动 MCP 客户端的同一个环境里设置了 `MIMO_API_KEY` |
+| 联网搜索没有触发 | 到 MiMo 控制台启用 Web Search Plugin，并等待缓存刷新 |
+| Token Plan key 失败 | 设置 `MIMO_PLAN=token-plan`，并检查 `MIMO_REGION` |
+| 本地媒体文件失败 | 检查路径引号、文件权限和 `MIMO_MAX_LOCAL_MEDIA_MB` |
+| Claude Code 看不到 MCP | 运行 `claude mcp get mimo`，必要时重启 Claude Code 会话 |
+
+### 安全提醒
+
+- 不要提交 API key。
+- 不要把 API key 写进 Skill 或 README。
+- 不要把生成音频的 base64 内容直接塞进聊天上下文。
+- 对搜索结果和模型输出保持校验，尤其是在自动化或代码修改场景里。
+- 按照本地规则和小米平台条款标识 AI 生成或合成内容。
 
 ## License
 
