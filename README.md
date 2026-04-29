@@ -11,6 +11,8 @@ available in [中文说明](#中文说明).
 
 - Five compact MCP tools for search, image, audio, video, and TTS workflows.
 - Web search support through Xiaomi MiMo's OpenAI-compatible `web_search` tool.
+- Token Plan-aware requests include Claude Code/MCP developer-workflow context
+  where the MiMo endpoint accepts a system prompt.
 - Multimodal media support from public URLs, data URIs, or local files.
 - TTS output is written to disk and returned as a path, avoiding large base64
   blobs in chat context.
@@ -64,7 +66,8 @@ Xiaomi's public MiMo-V2.5 open-source announcement says the MiMo-V2.5 model weig
 - Xiaomi MiMo API key
 - Claude Code or another MCP client
 
-For web search, enable the MiMo Web Search Plugin in the Xiaomi console:
+For web search, enable the MiMo Web Search Plugin in the Xiaomi console and use
+a pay-as-you-go MiMo API key for search calls:
 
 https://platform.xiaomimimo.com/#/console/plugin
 
@@ -80,7 +83,8 @@ MiMo may take a few minutes to apply plugin enable/disable changes.
 3. Do not commit or paste the real key into this repository, README, Skill file,
    screenshots, or chat logs.
 4. Enable the Web Search Plugin in the MiMo console before using
-   `mimo_web_search`.
+   `mimo_web_search`. If your main key is a Token Plan `tp-...` key, configure
+   a separate pay-as-you-go key as `MIMO_WEB_SEARCH_API_KEY` for this tool.
 5. Wait a few minutes after enabling or disabling the plugin, because MiMo may
    cache plugin state briefly.
 6. Register the MCP server in Claude Code or another MCP client.
@@ -208,6 +212,9 @@ Use mimo_tts to synthesize this sentence with the preset voice, writing a wav fi
 | `MIMO_PLAN` | auto | `pay-as-you-go` or `token-plan`. Usually inferred from key prefix. |
 | `MIMO_REGION` | `cn` | Token Plan region: `cn`, `sgp`, or `ams`. |
 | `MIMO_MODEL` | `mimo-v2.5-pro` | Model used for web search answers. |
+| `MIMO_WEB_SEARCH_API_KEY` | empty | Optional pay-as-you-go `sk-...` key used only by `mimo_web_search`. Required for web search when `MIMO_API_KEY` is a Token Plan key. |
+| `MIMO_WEB_SEARCH_BASE_URL` | `https://api.xiaomimimo.com/v1` | Optional web-search-only base URL override. |
+| `MIMO_WEB_SEARCH_MODEL` | `MIMO_MODEL` | Optional web-search-only model override. |
 | `MIMO_MULTIMODAL_MODEL` | `mimo-v2.5` | Model used for image/audio/video understanding. |
 | `MIMO_TTS_MODEL` | `mimo-v2.5-tts` | Default preset TTS model. |
 | `MIMO_SEARCH_MAX_KEYWORD` | `3` | Default max keywords per search round. |
@@ -251,9 +258,31 @@ OpenCode, and OpenClaw. Do not use a Token Plan key with this MCP as a generic
 application backend, batch automation service, or clearly non-coding API
 workload.
 
-Web search still requires the Web Search Plugin to be enabled in the MiMo
-console, and web search may add separate plugin usage charges plus model input
-tokens according to Xiaomi's pricing rules.
+For this reason, Token Plan-aware requests include concise Claude Code/MCP
+coding-tool context where the MiMo endpoint accepts a system prompt. Tool
+descriptions remain short; this context is sent only in the MiMo API request.
+Pay-as-you-go web search keeps a general web-search prompt.
+
+Web Search boundary: Xiaomi documents Web Search as a separate
+OpenAI-compatible plugin/API feature with separate plugin usage billing. The
+Token Plan docs describe coding-tool model access, but do not state that Token
+Plan keys include Web Search Plugin calls. In smoke tests, Token Plan keys
+worked for model, image, audio, video, and TTS calls, while `web_search`
+requests to the Token Plan endpoint returned `400 Param Incorrect`.
+
+Therefore, this MCP disables `mimo_web_search` when `MIMO_API_KEY` is a
+`tp-...` Token Plan key unless you also set `MIMO_WEB_SEARCH_API_KEY` to a
+pay-as-you-go MiMo `sk-...` key:
+
+```bash
+export MIMO_API_KEY="<your-token-plan-key>"
+export MIMO_WEB_SEARCH_API_KEY="<your-pay-as-you-go-key>"
+export MIMO_WEB_SEARCH_BASE_URL="https://api.xiaomimimo.com/v1"
+```
+
+With this setup, image/audio/video/TTS continue to use Token Plan routing, and
+only `mimo_web_search` uses the pay-as-you-go key. The Web Search Plugin still
+must be enabled in the MiMo console.
 
 ## Optional Skill
 
@@ -285,6 +314,11 @@ All-modality MCP smoke test:
 npm run smoke:all
 ```
 
+When `MIMO_API_KEY` is a Token Plan key and `MIMO_WEB_SEARCH_API_KEY` is not
+set, `smoke:all` skips `web_search` and still tests image, audio, video, and
+TTS. Set `MIMO_WEB_SEARCH_API_KEY` to include web search in the all-modality
+smoke test.
+
 If web search fails but normal MiMo calls work, check whether the Web Search Plugin is enabled and whether the cache delay has passed.
 
 ## Security Notes
@@ -307,6 +341,7 @@ If web search fails but normal MiMo calls work, check whether the Web Search Plu
 | --- | --- |
 | `Missing MIMO_API_KEY` | Set `MIMO_API_KEY` in the same environment that launches the MCP client. |
 | Web search returns normal chat only | Enable the MiMo Web Search Plugin in the Xiaomi console and wait for cache propagation. |
+| Web search is disabled with Token Plan | Set a pay-as-you-go key in `MIMO_WEB_SEARCH_API_KEY` for `mimo_web_search`. |
 | Token Plan key fails | Set `MIMO_PLAN=token-plan` and verify `MIMO_REGION` is `cn`, `sgp`, or `ams`. |
 | Local media upload fails | Check file path quoting, file permissions, and `MIMO_MAX_LOCAL_MEDIA_MB`. |
 | Claude Code does not show the server | Run `claude mcp get mimo`, then restart the Claude Code session if needed. |
@@ -327,6 +362,7 @@ Skill is the guidance layer: it explains when to use each tool and how to shape 
 
 - 提供 5 个精简 MCP 工具：联网搜索、图像理解、音频理解、视频理解、TTS。
 - 联网搜索使用 MiMo OpenAI 兼容接口里的 `web_search` 工具。
+- Token Plan 相关请求会在接口支持 system prompt 时带上 Claude Code/MCP 编程工具场景。
 - 多模态输入支持公网 URL、data URI、以及 MCP 进程可读取的本地文件路径。
 - TTS 会把音频写入本地文件并返回路径，避免把大段 base64 音频塞进上下文。
 - 只读取 `MIMO_*` 环境变量，不读取 `OPENAI_*` 或 `ANTHROPIC_*`，避免误用其他平台密钥。
@@ -337,7 +373,7 @@ Skill is the guidance layer: it explains when to use each tool and how to shape 
 1. 在 MiMo 控制台创建或复制 API key。
 2. 在本机环境变量里设置 `MIMO_API_KEY`。这是本机配置，不是提交到仓库。
 3. 不要把真实 API key 提交或粘贴到 README、Skill、源码、截图、聊天记录或任何 Git 跟踪文件。
-4. 使用 `mimo_web_search` 前，请在 MiMo 网页控制台启用 Web Search Plugin。
+4. 使用 `mimo_web_search` 前，请在 MiMo 网页控制台启用 Web Search Plugin。如果主 key 是 Token Plan 的 `tp-...`，请额外配置按量计费 key 到 `MIMO_WEB_SEARCH_API_KEY`。
 5. 插件启用或关闭后，等待几分钟让 MiMo 缓存状态刷新。
 6. 在 Claude Code 里注册 MCP，并用 `claude mcp get mimo` 确认连接状态。
 
@@ -389,6 +425,9 @@ claude mcp get mimo
 | --- | --- |
 | `MIMO_API_KEY` | 必填，Xiaomi MiMo API key |
 | `MIMO_MODEL` | 联网搜索回答模型，默认 `mimo-v2.5-pro` |
+| `MIMO_WEB_SEARCH_API_KEY` | 可选，仅供 `mimo_web_search` 使用的按量计费 `sk-...` key；主 key 是 Token Plan 时，联网搜索需要它 |
+| `MIMO_WEB_SEARCH_BASE_URL` | 可选，仅供联网搜索使用的 Base URL，默认 `https://api.xiaomimimo.com/v1` |
+| `MIMO_WEB_SEARCH_MODEL` | 可选，仅供联网搜索使用的模型 |
 | `MIMO_MULTIMODAL_MODEL` | 图像/音频/视频理解模型，默认 `mimo-v2.5` |
 | `MIMO_TTS_MODEL` | 默认 TTS 模型，默认 `mimo-v2.5-tts` |
 | `MIMO_PLAN` | `pay-as-you-go` 或 `token-plan`，通常可自动判断 |
@@ -409,7 +448,19 @@ claude mcp get mimo
 
 官方文档把 Token Plan 定位为 AI 编程工具场景，支持 Claude Code、OpenCode、OpenClaw 等主流开发工具。这个 MCP 在 Claude Code 里作为编程工具能力使用是匹配的；不要把 Token Plan key 用在普通应用后端、批量自动化脚本或明显非 Coding 的 API 工作负载里。
 
-联网搜索仍然需要在 MiMo 控制台启用 Web Search Plugin；联网搜索可能产生插件调用费用，并增加模型输入 tokens。
+因此，Token Plan 相关请求会在接口支持 system prompt 时带上简短的 Claude Code/MCP 编程工具上下文，用于软件工程、开发文档、API 集成、仓库维护、测试或配置工作。MCP 工具描述仍保持简短，这段上下文只在请求 MiMo API 时发送。按量计费的联网搜索会保留通用搜索 prompt。
+
+联网搜索边界：小米官方把 Web Search 写成独立的 OpenAI 兼容插件/API 能力，并说明会产生插件调用费用；Token Plan 文档说明的是编程工具中的模型调用套餐，没有明确写明 Token Plan key 支持 Web Search Plugin。实际烟测中，Token Plan key 可用于模型、图像、音频、视频和 TTS；但对 Token Plan endpoint 发起 `web_search` 会返回 `400 Param Incorrect`。
+
+所以，当 `MIMO_API_KEY` 是 `tp-...` Token Plan key 且没有设置 `MIMO_WEB_SEARCH_API_KEY` 时，本 MCP 会主动禁用 `mimo_web_search`。如果需要联网搜索，请额外配置一个按量计费的 MiMo `sk-...` key：
+
+```bash
+export MIMO_API_KEY="<your-token-plan-key>"
+export MIMO_WEB_SEARCH_API_KEY="<your-pay-as-you-go-key>"
+export MIMO_WEB_SEARCH_BASE_URL="https://api.xiaomimimo.com/v1"
+```
+
+这样图像、音频、视频和 TTS 仍走 Token Plan，只有 `mimo_web_search` 使用按量计费 key。Web Search Plugin 仍需要在 MiMo 控制台启用。
 
 ### 冒烟测试
 
@@ -433,12 +484,15 @@ npm run smoke:all
 
 `smoke:all` 会依次测试联网搜索、图像理解、音频理解、视频理解、预设 TTS、声音设计 TTS 和声音克隆 TTS。
 
+当 `MIMO_API_KEY` 是 Token Plan key 且没有设置 `MIMO_WEB_SEARCH_API_KEY` 时，`smoke:all` 会跳过联网搜索，只测试图像、音频、视频和 TTS。设置 `MIMO_WEB_SEARCH_API_KEY` 后会把联网搜索也纳入全模态烟测。
+
 ### 常见问题
 
 | 现象 | 检查项 |
 | --- | --- |
 | 提示 `Missing MIMO_API_KEY` | 确认启动 MCP 客户端的同一个环境里设置了 `MIMO_API_KEY` |
 | 联网搜索没有触发 | 到 MiMo 控制台启用 Web Search Plugin，并等待缓存刷新 |
+| Token Plan 下联网搜索不可用 | 额外设置按量计费 key 到 `MIMO_WEB_SEARCH_API_KEY` |
 | Token Plan key 失败 | 设置 `MIMO_PLAN=token-plan`，并检查 `MIMO_REGION` |
 | 本地媒体文件失败 | 检查路径引号、文件权限和 `MIMO_MAX_LOCAL_MEDIA_MB` |
 | Claude Code 看不到 MCP | 运行 `claude mcp get mimo`，必要时重启 Claude Code 会话 |

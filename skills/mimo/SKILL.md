@@ -16,6 +16,7 @@ When helping a user configure this MCP server for the first time:
 - Ask them to set a Xiaomi MiMo key in the local environment as `MIMO_API_KEY`.
 - Do not ask them to paste the API key into this skill, README, source code, or any Git-tracked file.
 - Remind them to enable the Web Search Plugin in the MiMo web console before using `mimo_web_search`.
+- If their main key is a Token Plan `tp-...` key, tell them `mimo_web_search` also needs a separate pay-as-you-go key in `MIMO_WEB_SEARCH_API_KEY`.
 - If the plugin was just enabled, tell them MiMo may need several minutes before search starts working.
 - Confirm with `claude mcp get mimo` or the client's equivalent MCP status command.
 
@@ -42,6 +43,8 @@ Supported official multimodal models are generally `mimo-v2.5` and `mimo-v2-omni
 ## Web Search
 
 The Xiaomi Web Search Plugin must be enabled in the MiMo console before search works. If it was just enabled, allow several minutes for cache propagation.
+
+Do not call `mimo_web_search` when the only configured key is a Token Plan `tp-...` key. Xiaomi documents Token Plan as coding-tool model access, while Web Search is documented as a separate plugin/API feature. Use `MIMO_WEB_SEARCH_API_KEY` with a pay-as-you-go MiMo `sk-...` key if the user wants search while keeping Token Plan for the other MiMo tools.
 
 Defaults are intentionally conservative:
 
@@ -80,6 +83,9 @@ The MCP server reads:
 - `MIMO_PLAN`
 - `MIMO_REGION`
 - `MIMO_MODEL`
+- `MIMO_WEB_SEARCH_API_KEY`
+- `MIMO_WEB_SEARCH_BASE_URL`
+- `MIMO_WEB_SEARCH_MODEL`
 - `MIMO_MULTIMODAL_MODEL`
 - `MIMO_TTS_MODEL`
 - `MIMO_MAX_LOCAL_MEDIA_MB`
@@ -98,9 +104,13 @@ If the MiMo subscription page shows a different Base URL, set `MIMO_BASE_URL` to
 
 Token Plan is intended for AI programming tools and coding scenarios. Do not guide users to use a Token Plan key with this MCP as a generic application backend, batch automation service, or clearly non-coding API workload.
 
+For Token Plan-capable prompts, keep the request coding-scoped. The MCP default system prompt identifies supported Token Plan calls as a Claude Code/MCP software-engineering workflow where the MiMo endpoint accepts a system prompt, so do not replace it with a generic assistant prompt unless the user explicitly needs a stricter coding prompt.
+
+When `MIMO_WEB_SEARCH_API_KEY` is set, only `mimo_web_search` uses that pay-as-you-go key, and it keeps the general web-search prompt. The other MiMo MCP tools continue to use `MIMO_API_KEY` and Token Plan routing.
+
 ## Failure Handling
 
-- Search failures often mean the Web Search Plugin is disabled or cache has not refreshed.
+- Search failures often mean the Web Search Plugin is disabled, cache has not refreshed, or the user tried search with only a Token Plan key.
 - Multimodal local-file failures usually mean the MCP process cannot read the path.
 - TTS clone failures often mean the voice sample is too large, unsupported, or not a clean mp3/wav sample.
 - If the response shape is unexpected, retry once with `include_raw: true`, but avoid returning base64 audio into chat.

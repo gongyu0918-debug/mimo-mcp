@@ -9,6 +9,14 @@ const TOKEN_PLAN_BASE_URLS = {
 const DEFAULT_MODEL = "mimo-v2.5-pro";
 const DEFAULT_MULTIMODAL_MODEL = "mimo-v2.5";
 const DEFAULT_TTS_MODEL = "mimo-v2.5-tts";
+const DEFAULT_CODING_TOOL_SYSTEM_PROMPT = [
+  "You are MiMo running inside Claude Code through a Model Context Protocol (MCP) server.",
+  "This request is part of an AI programming tool workflow for software engineering, developer documentation, API integration, repository maintenance, testing, or configuration.",
+  "Use the provided tool capability only for coding-tool tasks. If the user asks for a clearly non-coding workload, explain that Token Plan usage is intended for AI programming tools and ask for a coding-scoped request.",
+  "Answer concisely and preserve source facts accurately."
+].join(" ");
+const DEFAULT_SEARCH_SYSTEM_PROMPT = "You are a concise web search assistant. Use web search results when available, answer directly, and preserve source facts accurately.";
+const DEFAULT_MEDIA_SYSTEM_PROMPT = "You are MiMo, an AI assistant developed by Xiaomi. Analyze the provided media and answer accurately.";
 
 export function getConfig(env = process.env) {
   const apiKey = env.MIMO_API_KEY;
@@ -49,7 +57,9 @@ export function normalizeBaseUrl(value) {
 }
 
 export async function searchWithMiMo(input, env = process.env) {
-  const config = getConfig(env);
+  assertWebSearchCredentialBoundary(env);
+  const requestEnv = withWebSearchOverrides(env);
+  const config = getConfig(requestEnv);
 
   const query = String(input.query || "").trim();
   if (!query) {
@@ -74,7 +84,7 @@ export async function searchWithMiMo(input, env = process.env) {
         role: "system",
         content:
           input.system_prompt ||
-          "You are a concise web search assistant. Use web search results when available, answer directly, and preserve source facts accurately."
+          defaultSystemPromptForEnv(requestEnv, DEFAULT_SEARCH_SYSTEM_PROMPT)
       },
       {
         role: "user",
@@ -101,7 +111,7 @@ export async function searchWithMiMo(input, env = process.env) {
     thinking: {
       type: "disabled"
     }
-  }, env);
+  }, requestEnv);
 
   return normalizeSearchResponse(data);
 }
@@ -140,7 +150,7 @@ export async function understandMediaWithMiMo(kind, input, env = process.env) {
         role: "system",
         content:
           input.system_prompt ||
-          "You are MiMo, an AI assistant developed by Xiaomi. Analyze the provided media and answer accurately."
+          defaultSystemPromptForEnv(env, DEFAULT_MEDIA_SYSTEM_PROMPT)
       },
       {
         role: "user",
@@ -240,11 +250,63 @@ export async function createChatCompletion(body, env = process.env) {
   }
 
   if (!response.ok) {
-    const message = data?.error?.message || data?.message || responseText || response.statusText;
+    let message = data?.error?.message || data?.message || responseText || response.statusText;
+    if (isTokenPlanWebSearchRejection(config, body, message)) {
+      message += " Token Plan endpoint rejected the web_search tool parameters. Verify Web Search support for this Token Plan subscription, or set MIMO_WEB_SEARCH_API_KEY/MIMO_WEB_SEARCH_BASE_URL to route web search through a pay-as-you-go MiMo endpoint while keeping Token Plan for other MCP tools.";
+    }
     throw new Error(`MiMo API error ${response.status}: ${message}`);
   }
 
   return data;
+}
+
+function withWebSearchOverrides(env) {
+  const apiKey = env.MIMO_WEB_SEARCH_API_KEY;
+  const baseUrl = env.MIMO_WEB_SEARCH_BASE_URL;
+  const model = env.MIMO_WEB_SEARCH_MODEL;
+
+  if (!apiKey && !baseUrl && !model) {
+    return env;
+  }
+
+  return {
+    ...env,
+    ...(apiKey ? { MIMO_API_KEY: apiKey } : {}),
+    MIMO_BASE_URL: baseUrl || DEFAULT_BASE_URL,
+    MIMO_PLAN: "pay-as-you-go",
+    ...(model ? { MIMO_MODEL: model } : {})
+  };
+}
+
+function assertWebSearchCredentialBoundary(env) {
+  const mainKey = String(env.MIMO_API_KEY || "");
+  const plan = String(env.MIMO_PLAN || "").trim().toLowerCase().replace(/_/g, "-");
+  const usesTokenPlan = plan === "token-plan" || mainKey.startsWith("tp-");
+
+  if (usesTokenPlan && !env.MIMO_WEB_SEARCH_API_KEY) {
+    throw new Error(
+      "mimo_web_search is disabled when MIMO_API_KEY is a Token Plan key. Xiaomi's Token Plan docs cover model usage in coding tools, while Web Search is documented as a separate OpenAI-compatible plugin/API feature. Set MIMO_WEB_SEARCH_API_KEY to a pay-as-you-go MiMo sk key and enable the Web Search Plugin to use this tool, or use the other MiMo MCP tools with the Token Plan key."
+    );
+  }
+}
+
+function defaultSystemPromptForEnv(env, fallback) {
+  const mainKey = String(env.MIMO_API_KEY || "");
+  const plan = String(env.MIMO_PLAN || "").trim().toLowerCase().replace(/_/g, "-");
+  const usesTokenPlan = plan === "token-plan" || mainKey.startsWith("tp-");
+  if (!usesTokenPlan) {
+    return fallback;
+  }
+  return `${DEFAULT_CODING_TOOL_SYSTEM_PROMPT} ${fallback}`;
+}
+
+function isTokenPlanWebSearchRejection(config, body, message) {
+  return (
+    String(config.baseUrl || "").includes("token-plan-") &&
+    Array.isArray(body?.tools) &&
+    body.tools.some((tool) => tool?.type === "web_search") &&
+    /param incorrect/i.test(String(message || ""))
+  );
 }
 
 export function formatSearchResult(result, includeRaw = false) {

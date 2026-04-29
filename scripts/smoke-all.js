@@ -6,12 +6,17 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 
 const serverPath = fileURLToPath(new URL("../src/server.js", import.meta.url));
 
+const tokenPlanOnly = isTokenPlan(process.env) && !process.env.MIMO_WEB_SEARCH_API_KEY;
+
 const cases = [
   {
     name: "web_search",
     tool: "mimo_web_search",
+    skip: tokenPlanOnly
+      ? "Token Plan keys do not currently support MiMo web_search in this MCP without MIMO_WEB_SEARCH_API_KEY."
+      : "",
     args: {
-      query: "Xiaomi MiMo-V2.5 open source license latest official information",
+      query: "Find the official Xiaomi MiMo Token Plan and Web Search documentation needed to configure a Claude Code MCP server. Return the key implementation facts for a developer.",
       force_search: true,
       max_keyword: 2,
       limit: 2,
@@ -102,6 +107,17 @@ try {
   }
 
   for (const testCase of cases) {
+    if (testCase.skip) {
+      results.push({
+        name: testCase.name,
+        ok: true,
+        skipped: true,
+        reason: testCase.skip
+      });
+      console.log(`skip ${testCase.name}: ${testCase.skip}`);
+      continue;
+    }
+
     const started = Date.now();
     try {
       const result = await client.callTool({
@@ -157,4 +173,9 @@ function extractOutputPath(text) {
 
 function compact(text) {
   return String(text || "").replace(/\s+/g, " ").trim().slice(0, 500);
+}
+
+function isTokenPlan(env) {
+  const plan = String(env.MIMO_PLAN || "").trim().toLowerCase().replace(/_/g, "-");
+  return plan === "token-plan" || String(env.MIMO_API_KEY || "").startsWith("tp-");
 }
