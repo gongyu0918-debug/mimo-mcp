@@ -28,6 +28,7 @@ Usage guidance lives in `skills/mimo/SKILL.md` and can be loaded only when neede
 - [Client Configuration](#client-configuration)
 - [Tools](#tools)
 - [Configuration](#configuration)
+- [Token Plan Support](#token-plan-support)
 - [Smoke Tests](#smoke-tests)
 - [Security Notes](#security-notes)
 - [Troubleshooting](#troubleshooting)
@@ -74,13 +75,15 @@ MiMo may take a few minutes to apply plugin enable/disable changes.
 ### First-time checklist
 
 1. Create or copy a Xiaomi MiMo API key in the MiMo console.
-2. Set it locally as `MIMO_API_KEY`; do not put the key in this repository,
-   README, Skill file, screenshots, or chat logs.
-3. Enable the Web Search Plugin in the MiMo console before using
+2. Set it locally as `MIMO_API_KEY`. This means an OS or shell environment
+   variable, not repository content.
+3. Do not commit or paste the real key into this repository, README, Skill file,
+   screenshots, or chat logs.
+4. Enable the Web Search Plugin in the MiMo console before using
    `mimo_web_search`.
-4. Wait a few minutes after enabling or disabling the plugin, because MiMo may
+5. Wait a few minutes after enabling or disabling the plugin, because MiMo may
    cache plugin state briefly.
-5. Register the MCP server in Claude Code or another MCP client.
+6. Register the MCP server in Claude Code or another MCP client.
 
 Clone and install dependencies:
 
@@ -94,10 +97,10 @@ Set an API key:
 
 ```bash
 # macOS/Linux
-export MIMO_API_KEY="sk-..."
+export MIMO_API_KEY="<your-mimo-api-key>"
 
 # Windows PowerShell
-setx MIMO_API_KEY "sk-..."
+setx MIMO_API_KEY "<your-mimo-api-key>"
 ```
 
 Use a MiMo key here. The server intentionally does not read `OPENAI_*` or `ANTHROPIC_*` variables to avoid accidentally sending unrelated credentials to MiMo.
@@ -221,6 +224,37 @@ Default base URL behavior:
 - `tp-...` keys use `https://token-plan-cn.xiaomimimo.com/v1` unless `MIMO_REGION` changes it
 - `MIMO_BASE_URL` overrides all automatic routing
 
+## Token Plan Support
+
+This MCP supports Xiaomi MiMo Token Plan keys for coding-tool usage.
+
+Official Token Plan docs say Token Plan keys use the `tp-xxxxx` format and are
+independent from pay-as-you-go `sk-xxxxx` keys. They cannot be mixed. For this
+MCP, set the Token Plan key as `MIMO_API_KEY`.
+
+Token Plan routing in this server:
+
+- `tp-...` keys are detected automatically.
+- `MIMO_PLAN=token-plan` can force Token Plan routing.
+- `MIMO_REGION=cn` uses `https://token-plan-cn.xiaomimimo.com/v1`.
+- `MIMO_REGION=sgp` uses `https://token-plan-sgp.xiaomimimo.com/v1`.
+- `MIMO_REGION=ams` uses `https://token-plan-ams.xiaomimimo.com/v1`.
+- If the MiMo subscription page shows a different Base URL, set
+  `MIMO_BASE_URL` explicitly. It has priority over automatic routing.
+
+The server uses the official OpenAI-compatible protocol and sends credentials in
+the `api-key` request header, matching Xiaomi's Token Plan examples.
+
+Important scope note: Xiaomi describes Token Plan as a subscription plan for AI
+programming scenarios and mainstream AI development tools such as Claude Code,
+OpenCode, and OpenClaw. Do not use a Token Plan key with this MCP as a generic
+application backend, batch automation service, or clearly non-coding API
+workload.
+
+Web search still requires the Web Search Plugin to be enabled in the MiMo
+console, and web search may add separate plugin usage charges plus model input
+tokens according to Xiaomi's pricing rules.
+
 ## Optional Skill
 
 The optional skill is at:
@@ -255,8 +289,9 @@ If web search fails but normal MiMo calls work, check whether the Web Search Plu
 
 ## Security Notes
 
-- Do not commit API keys. Use OS-level environment variables or your MCP
-  client's secret handling.
+- Do not commit API keys to Git or paste real keys into README, Skill files,
+  screenshots, issue comments, or chat logs. Use OS-level environment variables
+  or your MCP client's secret handling.
 - This server only reads `MIMO_*` environment variables. It intentionally avoids
   `OPENAI_*` and `ANTHROPIC_*` fallbacks.
 - Local media files are read by the MCP server process and encoded for MiMo API
@@ -300,8 +335,8 @@ Skill is the guidance layer: it explains when to use each tool and how to shape 
 ### 首次配置清单
 
 1. 在 MiMo 控制台创建或复制 API key。
-2. 在本机环境变量里设置 `MIMO_API_KEY`。
-3. 不要把 API key 写进 README、Skill、源码、截图、聊天记录或任何 Git 跟踪文件。
+2. 在本机环境变量里设置 `MIMO_API_KEY`。这是本机配置，不是提交到仓库。
+3. 不要把真实 API key 提交或粘贴到 README、Skill、源码、截图、聊天记录或任何 Git 跟踪文件。
 4. 使用 `mimo_web_search` 前，请在 MiMo 网页控制台启用 Web Search Plugin。
 5. 插件启用或关闭后，等待几分钟让 MiMo 缓存状态刷新。
 6. 在 Claude Code 里注册 MCP，并用 `claude mcp get mimo` 确认连接状态。
@@ -314,14 +349,14 @@ cd mimo-mcp
 npm install
 ```
 
-设置 API key：
+在本机环境变量中设置 API key（这是本地配置，不是提交到 GitHub）：
 
 ```bash
 # macOS/Linux
-export MIMO_API_KEY="sk-..."
+export MIMO_API_KEY="<your-mimo-api-key>"
 
 # Windows PowerShell
-setx MIMO_API_KEY "sk-..."
+setx MIMO_API_KEY "<your-mimo-api-key>"
 ```
 
 ### Claude Code 配置
@@ -360,6 +395,22 @@ claude mcp get mimo
 | `MIMO_REGION` | Token Plan 区域：`cn`、`sgp` 或 `ams` |
 | `MIMO_MAX_LOCAL_MEDIA_MB` | 本地媒体文件大小上限，默认 50 MB |
 
+### Token Plan 支持
+
+这个 MCP 支持小米 MiMo Token Plan key，但使用边界要按官方 Token Plan 文档来。
+
+- Token Plan key 格式是 `tp-xxxxx`，普通按量 API key 格式是 `sk-xxxxx`，两者独立，不能混用。
+- 使用 Token Plan 时，把 `tp-...` key 设置为本机环境变量 `MIMO_API_KEY`。
+- MCP 会自动识别 `tp-...` 并走 Token Plan 专用 OpenAI 兼容 Base URL。
+- `MIMO_REGION=cn` 对应 `https://token-plan-cn.xiaomimimo.com/v1`。
+- `MIMO_REGION=sgp` 对应 `https://token-plan-sgp.xiaomimimo.com/v1`。
+- `MIMO_REGION=ams` 对应 `https://token-plan-ams.xiaomimimo.com/v1`。
+- 如果 MiMo 订阅管理页面显示的 Base URL 不同，以控制台显示为准，设置 `MIMO_BASE_URL` 覆盖自动路由。
+
+官方文档把 Token Plan 定位为 AI 编程工具场景，支持 Claude Code、OpenCode、OpenClaw 等主流开发工具。这个 MCP 在 Claude Code 里作为编程工具能力使用是匹配的；不要把 Token Plan key 用在普通应用后端、批量自动化脚本或明显非 Coding 的 API 工作负载里。
+
+联网搜索仍然需要在 MiMo 控制台启用 Web Search Plugin；联网搜索可能产生插件调用费用，并增加模型输入 tokens。
+
 ### 冒烟测试
 
 语法检查：
@@ -394,8 +445,8 @@ npm run smoke:all
 
 ### 安全提醒
 
-- 不要提交 API key。
-- 不要把 API key 写进 Skill 或 README。
+- 不要把真实 API key 提交到 Git 仓库。
+- 不要把真实 API key 写进 Skill、README、截图、issue 或聊天记录。
 - 不要把生成音频的 base64 内容直接塞进聊天上下文。
 - 对搜索结果和模型输出保持校验，尤其是在自动化或代码修改场景里。
 - 按照本地规则和小米平台条款标识 AI 生成或合成内容。

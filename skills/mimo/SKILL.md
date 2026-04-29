@@ -88,6 +88,16 @@ Set `MIMO_API_KEY` explicitly. The MCP server intentionally does not read `OPENA
 
 For token-plan keys beginning with `tp-`, set `MIMO_REGION` to `cn`, `sgp`, or `ams` unless `MIMO_BASE_URL` is explicitly set.
 
+Token Plan uses Xiaomi's OpenAI-compatible Base URLs for this MCP:
+
+- `cn`: `https://token-plan-cn.xiaomimimo.com/v1`
+- `sgp`: `https://token-plan-sgp.xiaomimimo.com/v1`
+- `ams`: `https://token-plan-ams.xiaomimimo.com/v1`
+
+If the MiMo subscription page shows a different Base URL, set `MIMO_BASE_URL` to that exact value.
+
+Token Plan is intended for AI programming tools and coding scenarios. Do not guide users to use a Token Plan key with this MCP as a generic application backend, batch automation service, or clearly non-coding API workload.
+
 ## Failure Handling
 
 - Search failures often mean the Web Search Plugin is disabled or cache has not refreshed.
