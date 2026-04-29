@@ -67,10 +67,21 @@ MiMo may take a few minutes to apply plugin enable/disable changes.
 
 ## Quick Start
 
+### First-time checklist
+
+1. Create or copy a Xiaomi MiMo API key in the MiMo console.
+2. Set it locally as `MIMO_API_KEY`; do not put the key in this repository,
+   README, Skill file, screenshots, or chat logs.
+3. Enable the Web Search Plugin in the MiMo console before using
+   `mimo_web_search`.
+4. Wait a few minutes after enabling or disabling the plugin, because MiMo may
+   cache plugin state briefly.
+5. Register the MCP server in Claude Code or another MCP client.
+
 Clone and install dependencies:
 
 ```bash
-git clone https://github.com/YOUR_NAME/mimo-mcp.git
+git clone https://github.com/gongyu0918-debug/mimo-mcp.git
 cd mimo-mcp
 npm install
 ```

@@ -9,6 +9,16 @@ Use this skill when a user wants Xiaomi MiMo capabilities through MCP and the to
 
 Keep the MCP server lightweight. Do not paste long official documentation into prompts. Prefer these compact routing rules.
 
+## First-Time Setup Checks
+
+When helping a user configure this MCP server for the first time:
+
+- Ask them to set a Xiaomi MiMo key in the local environment as `MIMO_API_KEY`.
+- Do not ask them to paste the API key into this skill, README, source code, or any Git-tracked file.
+- Remind them to enable the Web Search Plugin in the MiMo web console before using `mimo_web_search`.
+- If the plugin was just enabled, tell them MiMo may need several minutes before search starts working.
+- Confirm with `claude mcp get mimo` or the client's equivalent MCP status command.
+
 ## Tool Choice
 
 - Use `mimo_web_search` for fresh facts, news, prices, weather, releases, or anything time-sensitive.
