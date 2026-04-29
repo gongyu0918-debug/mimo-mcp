@@ -28,6 +28,7 @@ Usage guidance lives in `skills/mimo/SKILL.md` and can be loaded only when neede
 
 - [Quick Start](#quick-start)
 - [Client Configuration](#client-configuration)
+- [Client Compatibility](#client-compatibility)
 - [Tools](#tools)
 - [Configuration](#configuration)
 - [Token Plan Support](#token-plan-support)
@@ -172,6 +173,38 @@ Windows path example:
   }
 }
 ```
+
+## Client Compatibility
+
+Xiaomi's official integration docs for OpenCode, Claude Code, OpenClaw, Hermes
+Agent, Cline, Kilo Code, Roo Code, Codex, Cherry Studio, Zed, TRAE, and Qwen
+Code mainly describe how to use MiMo as a model provider through
+OpenAI-compatible or Anthropic-compatible APIs.
+
+If a client already supports MiMo through an OpenAI-compatible or
+Anthropic-compatible provider, you do not need this MCP for normal text chat or
+coding-agent model calls. Use the native provider path for that.
+
+Use this MCP when you want MiMo capabilities as explicit tools inside an MCP
+client:
+
+- `mimo_web_search`
+- `mimo_image_understand`
+- `mimo_audio_understand`
+- `mimo_video_understand`
+- `mimo_tts`
+
+Short rule:
+
+| Need | Best path |
+| --- | --- |
+| Normal text/code model provider | Use MiMo's official OpenAI/Anthropic-compatible client configuration |
+| Native image input in a client that already supports OpenAI-compatible vision | Use the native provider first |
+| Audio/video understanding, TTS, explicit Web Search tools, local-file media handling, or stable Claude Code tool calls | Add this MCP if the client supports MCP servers |
+| Client has no MCP support | Use the official provider configuration only; this MCP cannot be loaded there |
+
+Detailed notes for the tools in Xiaomi's integration list are in
+[docs/client-compatibility.md](docs/client-compatibility.md).
 
 ## Tools
 
@@ -408,6 +441,14 @@ Windows PowerShell 示例：
 claude mcp add -s user mimo -- node "C:\path\to\mimo-mcp\src\server.js"
 claude mcp get mimo
 ```
+
+### 其他客户端兼容性
+
+小米官方的 OpenCode、Claude Code、OpenClaw、Hermes Agent、Cline、Kilo Code、Roo Code、Codex、Cherry Studio、Zed、TRAE、Qwen Code 文档，主要说明的是如何通过 OpenAI 兼容协议或 Anthropic 兼容协议把 MiMo 配成模型 provider。
+
+如果只是普通文本对话或 Coding agent 模型调用，并且客户端已经支持 MiMo 的 OpenAI/Anthropic 兼容配置，通常不需要这个 MCP，直接按官方 provider 文档配置即可。
+
+如果你希望在支持 MCP 的客户端里把 MiMo 的联网搜索、图像理解、音频理解、视频理解和 TTS 当成明确工具来调用，再加载这个 MCP。更详细的客户端矩阵见 [docs/client-compatibility.md](docs/client-compatibility.md)。
 
 ### 工具列表
 

@@ -28,6 +28,14 @@ When helping a user configure this MCP server for the first time:
 - Use `mimo_video_understand` for video summary, scene description, visual QA, and audio+video description.
 - Use `mimo_tts` when the user wants speech/audio output.
 
+## Client Routing
+
+Do not present this MCP as a replacement for Xiaomi's official OpenAI-compatible or Anthropic-compatible model provider configuration.
+
+If the user only needs normal text/code chat in OpenCode, Claude Code, OpenClaw, Hermes Agent, Cline, Kilo Code, Roo Code, Codex, Cherry Studio, Zed, TRAE, Qwen Code, or another compatible client, tell them to use Xiaomi's official provider setup.
+
+Use this MCP when the client can load MCP servers and the user wants MiMo Web Search, image/audio/video understanding, TTS, or local media handling as explicit tools. See `docs/client-compatibility.md` for the client matrix and official Xiaomi integration links.
+
 ## Media Inputs
 
 Media fields accept:
